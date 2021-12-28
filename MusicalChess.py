@@ -9,7 +9,7 @@ MyMIDI.addTempo(0, 0, 60)
 def pgn_to_midi(PGN: str):
     game = parser.parse(PGN, actions=pgn.Actions())
     time = 0
-    for i in range(1, get_total_moves(game)):
+    for i in range(1, get_total_moves(game)+1):
         ply_to_note(get_ply(str(game.move(i)), "white"), time)
         time += 1
         try:
@@ -43,9 +43,9 @@ def get_ply(move: str, color: str) -> str:
         index += 1
     # return the appropriate ply
     if color == "white":
-        return move[spaces[0]:spaces[1]]
+        return move[spaces[0]+1:spaces[1]]
     elif color == "black":
-        return move[spaces[1]:]
+        return move[spaces[1]+1:]
 
 def ply_to_note(ply: str, time: int):
     instrument = piece_to_instrument(get_piece(ply))
@@ -136,4 +136,4 @@ def add_accidental(pitch: int, ply: str) -> int:
     return pitch
 
 # testing
-pgn_to_midi("1. e4 d5 2. Nf3 Nc6 3. Bb5 a6")
+pgn_to_midi("1. e4 d5 2. Nf3 Bc6 3. Bb5 a6")
