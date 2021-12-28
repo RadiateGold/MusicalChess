@@ -23,11 +23,60 @@ MyMIDI.addProgramChange(0, 0, 0, instrument)
 MyMIDI.addNote(track, channel, pitch, time, duration, volume)
 time = time + 1
 
-with open("test.mid", "wb") as output_file:
-    MyMIDI.writeFile(output_file)
-    
+
+
+# main function
+def ply_to_note(ply: str, time: int):
+    instrument = piece_to_instrument(get_piece(ply))
+    volume = rank_to_volume(get_rank(ply))
+    pitch = file_to_pitch(get_file(ply))
+    MyMIDI.addProgramChange(0, 0, 0, instrument)
+    MyMIDI.addNote(0, 0, pitch, time, 1, volume)
+
 # helper functions
-def piece_to_track(piece: str) -> int:
+def get_ply(move: str, color: str) -> str:
+    spaces = []
+    index = 0
+    for char in move:
+        if char == " ":
+            spaces.append(index)
+        index += 1
+    if color == "white":
+        return move[spaces[0]:spaces[1]]
+    elif color == "black":
+        return move[spaces[1]:]
+    
+def get_piece(ply: str) -> str:
+    if ply[0] in ["N", "B", "R", "Q", "K"]:
+        return ply[0]
+    else:
+        return ""
+
+def get_rank(ply: str) -> str:
+    back_index = 0
+    # if check or checkmate
+    if "+" in ply or "#" in ply:
+        back_index += 1
+    # if promotion
+    if "=" in ply:
+        back_index += 2
+    return ply[-1-back_index]
+
+def get_file(ply: str) -> str:
+    files = ["a", "b", "c", "d", "e", "f", "g", "h"]
+    index = 1
+    # if capture
+    if "x" in ply:
+        index += 1
+    # if pawn move
+    if not ply[0] in ["N", "B", "R", "Q", "K"]:
+        index -= 1
+    # if disambiguating notation
+    if ply[index+1] in files:
+        index += 1
+    return ply[index]    
+
+def piece_to_instrument(piece: str) -> int:
     if piece == "N":
         return 109
     elif piece == "B":
@@ -39,10 +88,9 @@ def piece_to_track(piece: str) -> int:
     elif piece == "K":
         return 3
     else:
-        return 41
-        
+        return 41        
     
-def rank_to_pitch(rank: str) -> int:
+def rank_to_volume(rank: str) -> int:
     # between 42 and 98
     return int(rank)*8+34
 
@@ -72,3 +120,8 @@ def add_accidental(pitch: int, move: str) -> int:
     elif "#" in move:
         pitch += 2
     return pitch
+
+# testing
+ply_to_note("Ba1", 0)
+with open("test.mid", "wb") as output_file:
+    MyMIDI.writeFile(output_file)
