@@ -2,27 +2,36 @@ from midiutil import MIDIFile
 from pgn_parser import parser, pgn
 
 # set up midi
-track      = 0
-channel    = 0
-time       = 0   # In beats
-tempo      = 60  # In BPM
-
-MyMIDI = MIDIFile(2)
-MyMIDI.addTempo(track, time, tempo)
+MyMIDI = MIDIFile(1)
+MyMIDI.addTempo(0, 0, 60)
 
 # main function
-def pgn_to_midi(pgn: str):
-    # set up pgn
-    game = parser.parse(pgn, actions=pgn.Actions())
+def pgn_to_midi(PGN: str):
+    game = parser.parse(PGN, actions=pgn.Actions())
+    time = 0
+    for i in range(1, get_total_moves(game)):
+        ply_to_note(get_ply(str(game.move(i)), "white"), time)
+        time += 1
+        try:
+            ply_to_note(get_ply(str(game.move(i)), "black"), time)
+            time += 1
+        except:
+            continue
+    with open("test.mid", "wb") as output_file:
+        MyMIDI.writeFile(output_file)
 
 # helper functions
-def ply_to_note(ply: str, time: int):
-    instrument = piece_to_instrument(get_piece(ply))
-    volume = rank_to_volume(get_rank(ply))
-    pitch = add_accidental(file_to_pitch(get_file(ply)), ply)
-    # add notes
-    MyMIDI.addProgramChange(0, 0, 0, instrument)
-    MyMIDI.addNote(0, 0, pitch, time, 1, volume)
+def get_total_moves(game: str) -> int:
+    ended = False
+    move = 1
+    while not ended:
+        try:
+            game.move(move)
+        except:
+            ended = True
+            return move - 1
+        finally:
+            move = move + 1
 
 def get_ply(move: str, color: str) -> str:
     spaces = []
@@ -37,6 +46,14 @@ def get_ply(move: str, color: str) -> str:
         return move[spaces[0]:spaces[1]]
     elif color == "black":
         return move[spaces[1]:]
+
+def ply_to_note(ply: str, time: int):
+    instrument = piece_to_instrument(get_piece(ply))
+    volume = rank_to_volume(get_rank(ply))
+    pitch = add_accidental(file_to_pitch(get_file(ply)), ply)
+    # add notes
+    MyMIDI.addProgramChange(0, 0, time, instrument)
+    MyMIDI.addNote(0, 0, pitch, time, 1, volume)
     
 def get_piece(ply: str) -> str:
     if ply[0] in ["N", "B", "R", "Q", "K"]:
@@ -119,3 +136,4 @@ def add_accidental(pitch: int, ply: str) -> int:
     return pitch
 
 # testing
+pgn_to_midi("1. e4 d5 2. Nf3 Nc6 3. Bb5 a6")
