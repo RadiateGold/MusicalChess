@@ -14,16 +14,17 @@ Nf2 42. g4 Bd3 43. Re6 1/2-1/2
 """
 
 # set up midi
+tempo = 120
 MyMIDI = MIDIFile(1)
-MyMIDI.addTempo(0, 0, 60)
+MyMIDI.addTempo(0, 0, tempo)
 
 # main function
-def pgn_to_midi(PGN: str):
+def pgn_to_midi(PGN: str, separate: bool):
     game = parser.parse(PGN, actions=pgn.Actions())
     time = 0
     for i in range(1, get_total_moves(game)+1):
         ply_to_note(str(game.move(i).white.san), time)
-        time += 1
+        time += separate
         try:
             ply_to_note(str(game.move(i).black.san), time)
             time += 1
@@ -139,4 +140,4 @@ def add_accidental(pitch: int, ply: str) -> int:
     return pitch
 
 # testing
-pgn_to_midi(PGN)
+pgn_to_midi(PGN, False)
