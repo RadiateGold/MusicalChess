@@ -3,30 +3,29 @@ from pgn_parser import parser, pgn
 
 # example PGN
 PGN = """
-1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 {This opening is called the Ruy Lopez.}
-4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 d6 8. c3 e4 9. h3 Nb8 10. d4 Nbd7
-11. c4 c6 12. cxb5 axb5 13. Nc3 Bb7 14. Bg5 b4 15. Nb1 h6 16. Bh4 c5 17. dxe5
-Nxe4 18. Bxe7 Qxe7 19. exd6 Qf6 20. Nbd2 Nxd6 21. Nc4 Nxc4 22. Bxc4 Nb6
-23. Ne5 Rae8 24. Bxf7+ Rxf7 25. Nxf7 Rxe1+ 26. Qxe1 Kxf7 27. Qe3 Qg5 28. Qxg5
-hxg5 29. b3 Ke6 30. a3 Kd6 31. axb4 cxb4 32. Ra5 Nd5 33. f3 Bc8 34. Kf2 Bf5
-35. Ra7 g6 36. Ra6+ Kc5 37. Ke1 Nf4 38. g3 Nxh3 39. Kd2 Kb5 40. Rd6 Kc5 41. Ra6
-Nf2 42. g4 Bd3 43. Re6 1/2-1/2
+1. e4 c6 2. d4 d5 3. Nc3 dxe4 4. Nxe4 Nf6 5. Ng3 h5 6. Be2 h4 7. Nf1 Bf5 8. Ne3
+Be4 9. Nf3 h3 10. O-O hxg2 11. Nxg2 Qc7 12. Ne5 Nbd7 13. Bf4 Nxe5 14. Bxe5 Qd7
+15. c3 Qh3 16. f3 Ng4 17. Bf4 Nxh2 18. fxe4 Nxf1 19. Qxf1 e6 20. Ne3 Qh1+ 21.
+Kf2 Qxe4 22. Bg3 Rh6 23. Bf3 Qh7 24. Ng4 Rg6 25. Ne5 Rg5 26. Qg2 Bd6 27. Bxc6+
+Ke7 28. Bxb7 Bxe5 29. dxe5 Qc2+ 30. Kg1 Qxg2+ 31. Kxg2 Rb8 32. Ba6 Rxb2+ 33. Kf3
+f6 34. Bf4 Rgg2 35. Bc4 Rgc2 36. Rc1 Rxc1 37. Bxc1 Rc2 38. Ba3+ Kf7 39. Bb4 fxe5
+40. Ke4 Rc1 41. Kxe5 Re1+ 42. Kd6 g5 43. Bc5 Rd1+ 44. Bd4 Kg6 45. Kxe6 Re1+ 46.
+Kd6 a5 47. Kc5 g4 48. Bd3+ Kg5 49. Kb5 Ra1 50. a4 g3 51. Kxa5 g2 52. Kb5 Kf4 53.
+a5 Rd1 54. Kc4 Ra1 55. Bb6 Rxa5 56. Bg1 Ra1 57. Bh2+ Ke3 58. Bg6 Rh1 59. Bd6
+Rh4+ 60. Kd5 Rd4+ 0-1
 """
 
-# set up midi
-tempo = 120
-MyMIDI = MIDIFile(1)
-MyMIDI.addTempo(0, 0, tempo)
-
 # main function
-def pgn_to_midi(PGN: str, separate: bool):
+def pgn_to_midi(PGN: str, separate: bool, tempo: float):
+    MyMIDI = MIDIFile(1)
+    MyMIDI.addTempo(0, 0, tempo)
     game = parser.parse(PGN, actions=pgn.Actions())
     time = 0
     for i in range(1, get_total_moves(game)+1):
-        ply_to_note(str(game.move(i).white.san), time)
+        ply_to_note(str(game.move(i).white.san), time, MyMIDI)
         time += separate
         try:
-            ply_to_note(str(game.move(i).black.san), time)
+            ply_to_note(str(game.move(i).black.san), time, MyMIDI)
             time += 1
         except:
             continue
@@ -46,17 +45,17 @@ def get_total_moves(game: str) -> int:
         finally:
             move = move + 1
 
-def ply_to_note(ply: str, time: int):
+def ply_to_note(ply: str, time: int, midi: MIDIFile):
     if not "O" in ply:
         instrument = piece_to_instrument(get_piece(ply))
         volume = rank_to_volume(get_rank(ply))
         pitch = add_accidental(file_to_pitch(get_file(ply)), ply)
         # add notes
-        MyMIDI.addProgramChange(0, 0, time, instrument)
-        MyMIDI.addNote(0, 0, pitch, time, 1, volume)
+        midi.addProgramChange(0, 0, time, instrument)
+        midi.addNote(0, 0, pitch, time, 1, volume)
     else:
-        MyMIDI.addProgramChange(0, 0, time, 1)
-        MyMIDI.addNote(0, 0, 0, time, 1, 0)
+        midi.addProgramChange(0, 0, time, 1)
+        midi.addNote(0, 0, 0, time, 1, 0)
     
 def get_piece(ply: str) -> str:
     if ply[0] in ["N", "B", "R", "Q", "K"]:
@@ -140,4 +139,4 @@ def add_accidental(pitch: int, ply: str) -> int:
     return pitch
 
 # testing
-pgn_to_midi(PGN, False)
+pgn_to_midi(PGN, False, 120)
