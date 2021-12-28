@@ -1,46 +1,38 @@
 from midiutil import MIDIFile
 from pgn_parser import parser, pgn
 
-# set up pgn
-game = parser.parse("1. e4 e5", actions=pgn.Actions())
-print(game.move(1))
-
 # set up midi
 track      = 0
 channel    = 0
 time       = 0   # In beats
-duration   = 1   # In beats
 tempo      = 60  # In BPM
-volume     = 100 # 0-127, as per the MIDI standard
-pitch      = 60
-instrument = 46
 
 MyMIDI = MIDIFile(2)
 MyMIDI.addTempo(track, time, tempo)
 
-#create music
-MyMIDI.addProgramChange(0, 0, 0, instrument)
-MyMIDI.addNote(track, channel, pitch, time, duration, volume)
-time = time + 1
-
-
-
 # main function
+def pgn_to_midi(pgn: str):
+    # set up pgn
+    game = parser.parse(pgn, actions=pgn.Actions())
+
+# helper functions
 def ply_to_note(ply: str, time: int):
     instrument = piece_to_instrument(get_piece(ply))
     volume = rank_to_volume(get_rank(ply))
-    pitch = file_to_pitch(get_file(ply))
+    pitch = add_accidental(file_to_pitch(get_file(ply)), ply)
+    # add notes
     MyMIDI.addProgramChange(0, 0, 0, instrument)
     MyMIDI.addNote(0, 0, pitch, time, 1, volume)
 
-# helper functions
 def get_ply(move: str, color: str) -> str:
     spaces = []
     index = 0
+    # find where the spaces are
     for char in move:
         if char == " ":
             spaces.append(index)
         index += 1
+    # return the appropriate ply
     if color == "white":
         return move[spaces[0]:spaces[1]]
     elif color == "black":
@@ -49,6 +41,7 @@ def get_ply(move: str, color: str) -> str:
 def get_piece(ply: str) -> str:
     if ply[0] in ["N", "B", "R", "Q", "K"]:
         return ply[0]
+    # otherwise pawn
     else:
         return ""
 
@@ -87,41 +80,42 @@ def piece_to_instrument(piece: str) -> int:
         return 52
     elif piece == "K":
         return 3
+    # pawn
     else:
         return 41        
     
 def rank_to_volume(rank: str) -> int:
-    # between 42 and 98
-    return int(rank)*8+34
+    # between 50 and 106
+    return int(rank)*8+42
 
 def file_to_pitch(file: str) -> int:
-    if file == "A":
+    if file == "a":
         return 45
-    elif file == "B":
+    elif file == "b":
         return 47
-    elif file == "C":
+    elif file == "c":
         return 48
-    elif file == "D":
+    elif file == "d":
         return 50
-    elif file == "E":
+    elif file == "e":
         return 52
-    elif file == "F":
+    elif file == "f":
         return 53
-    elif file == "G":
+    elif file == "g":
         return 55
+    # h file becomes rest
     else:
         return 0
     
-def add_accidental(pitch: int, move: str) -> int:
-    if "x" in move:
+def add_accidental(pitch: int, ply: str) -> int:
+    if "x" in ply:
         pitch -= 1
-    elif "+" in move:
+    if "=" in ply:
+        pitch -= 2
+    if "+" in ply:
         pitch += 1
-    elif "#" in move:
+    if "#" in ply:
         pitch += 2
     return pitch
 
 # testing
-ply_to_note("Ba1", 0)
-with open("test.mid", "wb") as output_file:
-    MyMIDI.writeFile(output_file)
