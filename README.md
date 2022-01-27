@@ -1,4 +1,3 @@
 # MusicalChess
-To use, paste the PGN text as the variable PGN. Upon running the program, a midi file will be created in the same location as the code.
-
-The ability to use without opening the .py file will be added soon.
+To use, paste the .py file into a folder along with the .pgn file you want to convert.\
+Upon running the program, a .midi file will be created based on the chess game.
