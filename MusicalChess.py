@@ -14,7 +14,6 @@ def pgn_to_midi(PGN: str, separate: bool, tempo: float):
     MyMIDI = MIDIFile(1)
     MyMIDI.addTempo(0, 0, tempo)
     moves = pgn_parse(PGN)
-    print(moves)
     time = 0
     for i in range(1, len(moves)+1):
         ply_to_note(moves[i]["white"], time, MyMIDI)
@@ -80,13 +79,25 @@ def get_file(ply: str) -> str:
     # if capture
     if "x" in ply:
         index += 1
+        
     # if pawn move
     if not ply[0] in ["N", "B", "R", "Q", "K"]:
         index -= 1
+        
+    # for counting how many ranks or files there are the ply
+    def count_type_in_ply(ply: str, type: [str]) -> int:
+        count = 0;
+        for char in ply:
+            if char in type:
+                count += 1;
+        return count
+    
     # if disambiguating notation
-    if ply[index+1] in files:
+    if count_type_in_ply(ply, ["a", "b", "c", "d", "e", "f", "g", "h"]) == 2:
         index += 1
-    return ply[index]    
+    if count_type_in_ply(ply, ["1", "2", "3", "4", "5", "6", "7", "8"]) == 2:
+        index += 1
+    return ply[index]
 
 def piece_to_instrument(piece: str) -> int:
     if piece == "N":
@@ -137,6 +148,7 @@ def add_accidental(pitch: int, ply: str) -> int:
     if "#" in ply:
         pitch += 2
     return pitch
+        
 
 # testing
 pgn_to_midi(PGN, False, 120)
