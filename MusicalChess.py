@@ -86,10 +86,10 @@ def get_file(ply: str) -> str:
         
     # for counting how many ranks or files there are the ply
     def count_type_in_ply(ply: str, type: [str]) -> int:
-        count = 0;
+        count = 0
         for char in ply:
             if char in type:
-                count += 1;
+                count += 1
         return count
     
     # if disambiguating notation
