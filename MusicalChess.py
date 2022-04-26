@@ -149,6 +149,4 @@ def add_accidental(pitch: int, ply: str) -> int:
         pitch += 2
     return pitch
         
-
-# testing
 pgn_to_midi(PGN, False, 120)
